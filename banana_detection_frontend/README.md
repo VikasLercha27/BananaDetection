@@ -1,117 +1,120 @@
-# DoneWithIt (Expo React Native)
+# Banana Detection Frontend
 
-Mobile app to capture an image, send it to a backend for analysis, and show the prediction result.
+This is the Expo React Native mobile frontend for the Banana Detection project. The app captures or selects a banana image, sends it to the backend for inference, and displays the prediction result.
 
-## 1. Prerequisites
+## Features
 
-- Node.js 18+ (LTS recommended)
-- npm 9+
-- Git
-- Expo Go app on your phone (Android/iOS) OR Android Studio / Xcode simulator
-- Backend server running on port `3000`
+* Expo-based React Native app
+* Uses `expo-camera` and `expo-image-picker`
+* Connects to the FastAPI backend prediction endpoint
+* Supports Android, iOS, and web via Expo
 
-## 2. Clone And Install
+## Prerequisites
+
+* Node.js 18 or newer
+* npm or yarn
+* Expo CLI (optional, can use `npx expo`)
+* Backend server running on port `8000`
+
+## Installation
+
+From the `banana_detection_frontend` directory:
 
 ```bash
-git clone <your-repo-url>
-cd DoneWithIt
 npm install
 ```
 
-## 3. Start The App
+or with yarn:
 
 ```bash
-npx expo start -c
+yarn install
 ```
 
-Then:
+## Running the App
 
-- Press `a` for Android emulator, or
-- Press `i` for iOS simulator, or
-- Scan the QR in Expo Go.
+Start the Expo development server:
 
-## 4. Backend Requirements (Important)
-
-The app sends:
-
-- `POST /analyze`
-- Request body: **raw image bytes** (not multipart form)
-- `Content-Type`: `image/jpeg` or `image/png`
-
-The backend should:
-
-- listen on `0.0.0.0:3000`
-- parse raw body for image types
-- return prediction text or JSON
-
-Example Express parser:
-
-```js
-app.use(
-  "/analyze",
-  express.raw({
-    type: ["image/jpeg", "image/png", "application/octet-stream"],
-    limit: "10mb",
-  }),
-);
+```bash
+npm start
 ```
 
-## 5. API URL Behavior
+Then choose one of these options:
 
-Current app config is in `src/config/api.js`.
+* `npm run android` — launch Android emulator
+* `npm run ios` — launch iOS simulator
+* `npm run web` — open in browser
+* Scan the QR code from Expo Go on a physical device
 
-Resolution logic:
+## Backend Connection
 
-- Expo host LAN IP (best for phone + Expo Go)
-- Android fallback: `http://10.0.2.2:3000`
-- iOS fallback: `http://127.0.0.1:3000`
-- Default fallback: `http://localhost:3000`
-- Endpoint path default: `/analyze`
+The frontend uses `src/config/api.js` to determine the backend URL.
 
-Optional override for endpoint path:
+By default, it expects the backend on port `8000`.
 
-```powershell
-$env:EXPO_PUBLIC_PREDICTION_PATH="/analyze"; npx expo start -c
+If you need a custom backend host/port, update `src/config/api.js` or configure Expo to use the correct LAN IP.
+
+## API Endpoint
+
+The frontend sends image uploads as multipart form data to:
+
+```
+POST /predict
 ```
 
-## 6. Common Networking Setup (Expo Go On Phone)
+Request fields:
 
-- Phone and laptop must be on same Wi-Fi
-- No guest network isolation
-- VPN off on both devices
-- Windows Firewall allows Node.js / port `3000`
+* `image` — uploaded image file
+* `model` — currently always `ann_classifier`
 
-If requests fail, test backend URL from phone browser:
+Example mobile payload is handled in `src/services/predictionService.js`.
 
-- `http://<your-laptop-lan-ip>:3000/analyze`
+## Project Structure
 
-## 7. Troubleshooting
+```text
+banana_detection_frontend/
+├── App.js
+├── app.json
+├── index.js
+├── package.json
+├── README.md
+├── assets/
+└── src/
+    ├── components/
+    │   └── AppLayout.js
+    ├── config/
+    │   └── api.js
+    ├── navigation/
+    │   └── AppNavigator.js
+    ├── screens/
+    │   ├── CameraScreen.js
+    │   ├── HomeScreen.js
+    │   ├── PreviewScreen.js
+    │   └── ResultScreen.js
+    └── services/
+        └── predictionService.js
+```
 
-### A) `Failed to download remote update`
+## Notes
 
-This is Expo bundle delivery issue (not API code).
+* The current frontend is designed to work with the backend on `http://localhost:8000`.
+* If using a physical device, make sure the phone and development machine are on the same network.
+* Do not manually set the `Content-Type` header for multipart uploads in React Native; the app lets Expo handle it.
 
-Try:
-
-1. Stop all Expo/Metro processes.
-2. Run: `npx expo start --tunnel -c`
-3. Remove project from Expo Go recents and re-scan QR.
-4. Disable VPN/proxy.
-5. Ensure firewall allows Node.
-
-### B) `Upload failed with status 404`
-
-Backend route mismatch. Ensure server has `POST /analyze`.
-
-### C) `Upload failed with status 400` and server says image body required
-
-Server expects raw bytes. Ensure backend is using `express.raw(...)` and not multipart parsing for this route.
-
-## 8. Project Scripts
+## Scripts
 
 From `package.json`:
 
-- `npm run start` -> `expo start`
-- `npm run android` -> `expo start --android`
-- `npm run ios` -> `expo start --ios`
-- `npm run web` -> `expo start --web`
+* `npm start` — start Expo dev server
+* `npm run android` — open Android
+* `npm run ios` — open iOS
+* `npm run web` — open web browser
+
+## Troubleshooting
+
+* If the app can’t reach the backend, verify the backend is running and accessible on port `8000`.
+* For Android emulator use `http://10.0.2.2:8000`.
+* For iOS simulator use `http://127.0.0.1:8000`.
+
+## License
+
+This frontend is part of the Banana Detection project.

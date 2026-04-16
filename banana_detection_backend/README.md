@@ -1,238 +1,144 @@
-# Banana & Mango Ripeness Detection using Deep Learning
+# Banana Detection Backend
 
-## Project Overview
+## Overview
 
-This project implements a computer vision system for detecting the ripeness of bananas and mangoes using deep learning and machine learning techniques.
+This backend serves the banana ripeness and artificial/natural banana detection API using a FastAPI service. The model uses EfficientNetB0 features plus a small ANN classifier to predict banana labels from uploaded images.
 
-The system extracts visual features from fruit images using pretrained convolutional neural networks and trains multiple classifiers to determine the ripeness category. Multiple model–classifier combinations are evaluated to identify the best-performing solution.
+## Features
 
-The final system can be deployed through a REST API for real-time predictions.
+* REST API powered by FastAPI
+* EfficientNetB0 feature extraction
+* ANN classifier inference with saved scaler and label mapping
+* Cross-origin requests enabled for mobile and web clients
+* Health check endpoint and image prediction endpoint
 
----
+## Requirements
 
-# Problem Statement
+* Python 3.10 or newer
+* `fastapi`
+* `uvicorn[standard]`
+* `tensorflow>=2.15.0`
+* `opencv-python-headless`
+* `Pillow`
+* `numpy`
+* `scikit-learn`
+* `joblib`
 
-Determining fruit ripeness is important in agriculture, food supply chains, and retail quality control. Manual inspection is subjective and inefficient.
+## Installation
 
-This project provides an automated solution using computer vision and machine learning to classify fruit ripeness from images accurately and consistently.
+1. Open a terminal in `banana_detection_backend`
+2. Create a virtual environment:
 
----
-
-# System Workflow
-
-1. Image input and preprocessing
-2. Feature extraction using pretrained CNN models
-3. Feature scaling and transformation
-4. Classification using machine learning models
-5. Prediction served through a REST API
-
----
-
-# Model Experimentation Strategy
-
-This project evaluates multiple feature extraction models and classifiers to determine the most effective combination for ripeness detection.
-
-## Feature Extraction Models
-
-The following pretrained deep learning models are used to extract image features:
-
-* MobileNetV2
-* VGG16
-* EfficientNet
-* ConvNeXt
-
-These networks generate high-level feature representations from fruit images.
-
-## Classifiers Used
-
-The extracted features are used to train different classifiers:
-
-* Support Vector Machine (SVM)
-* Logistic Regression
-* Artificial Neural Network (ANN)
-
----
-
-# Experimentation Pipeline
-
-1. Preprocess fruit images (resize, normalize, clean dataset)
-2. Extract deep features using CNN models
-3. Train classifiers using extracted features
-4. Evaluate model performance
-5. Compare different model–classifier combinations
-6. Select the best-performing model for final deployment
-
----
-
-# Technologies Used
-
-## Programming Language
-
-* Python
-
-## Deep Learning
-
-* TensorFlow
-* Keras
-
-## Machine Learning
-
-* Scikit-learn
-
-## Computer Vision
-
-* OpenCV
-* PIL
-
-## Backend / API
-
-* Flask
-
-## Data Processing
-
-* NumPy
-
----
-
-# Project Structure
-
-```
-banana-mango-ripeness-detection/
-
-api/
-  app.py                 → REST API for predictions
-
-training/
-  train_ann.py           → ANN training
-  train_cnn.py           → CNN utilities
-  train_logistic.py      → Logistic regression training
-  train_svc.py           → SVM training
-
-efficientnet/
-  train_efficientnet.py  → EfficientNet training
-
-features/
-  extract_features_vgg16.py
-  feature_extractor_mobilenet.py
-  convnext.py
-
-models/
-  → stored trained models and scalers
-
-service.py
-service_vgg16.py
-utils.py
-requirements.txt
-README.md
+```bash
+python -m venv .venv
 ```
 
----
-
-# Installation
-
-Clone the repository:
-
-```
-git clone https://github.com/VikasLercha27/BananaDetection
-cd BananaDetection
-```
-
-Create a virtual environment:
-
-```
-python -m venv venv
-```
-
-Activate environment
+3. Activate the virtual environment:
 
 Windows:
 
-```
-venv\Scripts\activate
-```
-
-Linux / Mac:
-
-```
-source venv/bin/activate
+```powershell
+.venv\Scripts\Activate.ps1
 ```
 
-Install dependencies:
+macOS / Linux:
 
+```bash
+source .venv/bin/activate
 ```
+
+4. Install dependencies:
+
+```bash
 pip install -r requirements.txt
 ```
 
----
+## Running the API
 
-# Training Models
+Start the backend server from the `banana_detection_backend` directory:
 
-Train different classifiers using the provided scripts:
-
-```
-python training/train_svc.py
-python training/train_ann.py
-python efficientnet/train_efficientnet.py
-```
-
----
-
-# Running the API
-
-Start the Flask API server:
-
-```
+```bash
 python api/app.py
 ```
 
-API will run at:
+The API will run at:
 
-```
-http://localhost:5000
-```
-
----
-
-# Example API Request
-
-```
-curl -X POST -F "image=@banana.jpg" \
-     -F "backbone=mobilenet" \
-     -F "classifier=svc" \
-     http://localhost:5000/predict
+```text
+http://localhost:8000
 ```
 
-### Example Response
+## API Endpoints
 
+### GET /
+
+Returns a simple status response with current model metadata.
+
+### GET /health
+
+Returns a health status: `{"status": "ok"}`.
+
+### POST /predict
+
+Accepts multipart form data with an image file and returns prediction details.
+
+Request fields:
+
+* `image` — image file upload
+* `model` — optional model name, currently `ann_classifier`
+
+Example request:
+
+```bash
+curl -X POST "http://localhost:8000/predict" \
+  -F "image=@banana.jpg" \
+  -F "model=ann_classifier"
 ```
+
+Example response:
+
+```json
 {
-  "prediction": "ripe",
-  "confidence": 0.92,
-  "backbone": "mobilenet",
-  "classifier": "svc"
+  "model": "ann_classifier",
+  "backbone": "efficientnet",
+  "prediction": 1,
+  "label": "ripe",
+  "confidence": 0.9876,
+  "raw_prob": 0.9876
 }
 ```
 
----
+## Project Structure
 
-# Future Improvements
+```text
+banana_detection_backend/
+├── api/
+│   └── app.py                   # FastAPI server
+├── dataset/                     # image dataset folders
+├── dataset_unseen/              # unseen evaluation datasets
+├── features_classifier/         # saved model artifacts
+│   └── efficientnet/
+│       ├── ann_classifier.keras
+│       ├── classes.npy
+│       └── scaler.pkl
+├── features_model/              # feature dataset files
+├── graphs/                      # training / evaluation graphs
+├── models/                      # trained model outputs
+├── training/                    # training scripts
+│   ├── explainmodel.py
+│   ├── train_ann.py
+│   ├── train_hparam_ann.py
+│   ├── train_logistic.py
+│   └── train_svc.py
+├── requirements.txt
+└── README.md
+```
 
-* Model optimization for edge deployment
-* Real-time fruit detection from video streams
-* Support for additional fruit categories
-* Web interface for easy interaction
-* Ensemble learning for improved accuracy
-* Data augmentation for better model robustness
-* Frontend web or mobile interface for uploading fruit images and viewing ripeness predictions.
----
+## Notes
 
-# Author
+* The FastAPI backend currently uses `features_classifier/efficientnet` as the model source.
+* If you change the model or backbone, update `api/app.py` accordingly.
+* Ensure the backend is running on port `8000` before connecting the frontend.
 
-Vikas Lercha
-B.Tech – Computer Science Engineering
-
----
-
-# License
+## License
 
 This project is licensed under the MIT License.
